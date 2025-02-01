@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.eventbus.api.IEventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ public class PlayerHealthIndicator {
         modEventBus.addListener(this::clientSetup);
         modEventBus.register(Config.class);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
+        ModLoadingContext.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
 
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -40,9 +41,7 @@ public class PlayerHealthIndicator {
             return;
         }
 
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
-
+        if (event.getEntity() instanceof Player player) {
             float health = player.getHealth();
             String healthText = String.format("%.1f", health);
 
