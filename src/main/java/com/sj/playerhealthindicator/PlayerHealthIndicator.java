@@ -3,6 +3,7 @@ package com.sj.playerhealthindicator;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -35,14 +36,12 @@ public class PlayerHealthIndicator {
     }
 
     @net.minecraftforge.eventbus.api.SubscribeEvent
-    public void onRenderLiving(RenderLivingEvent.Post<?, ?, ?> event) {
+    public void onRenderLiving(RenderLivingEvent.RenderLayer event) {  // Use RenderLayer
         if (!Config.showHealthIndicators) {
             return;
         }
 
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
-
+        if (event.getEntity() instanceof Player player) {
             float health = player.getHealth();
             String healthText = String.format("%.1f", health);
 
@@ -50,17 +49,28 @@ public class PlayerHealthIndicator {
             Font font = Minecraft.getInstance().font;
 
             poseStack.pushPose();
-            poseStack.translate(0, player.getBbHeight() + Config.healthTextHeightOffset, 0);
-            poseStack.mulPose(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
-            poseStack.scale(-0.025f, -0.025f, 0.025f);
+            try {
+                poseStack.translate(0, player.getBbHeight() + Config.healthTextHeightOffset, 0);
+                poseStack.mulPose(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
+                poseStack.scale(-0.025f, -0.025f, 0.025f);
 
-            int color = Integer.parseInt(Config.healthTextColor, 16);
+                int color;
+                try {
+                    color = Integer.parseInt(Config.healthTextColor, 16);
+                } catch (NumberFormatException e) {
+                    color = 0xFFFFFF; // Default to white if invalid
+                }
 
-            font.drawInBatch(healthText, -font.width(healthText) / 2f, 0, color, false,
-                    poseStack.last().pose(), Minecraft.getInstance().renderBuffers().bufferSource(),
-                    Font.DisplayMode.NORMAL, 0, 15728880);
+                MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
 
-            poseStack.popPose();
+                font.drawInBatch(healthText, -font.width(healthText) / 2f, 0, color, false,
+                        poseStack.last().pose(), bufferSource,
+                        Font.DisplayMode.NORMAL, 0, 15728880);
+
+                bufferSource.endBatch();  // Ensure proper rendering
+            } finally {
+                poseStack.popPose(); // Always pop to prevent stack corruption
+            }
         }
     }
 }
