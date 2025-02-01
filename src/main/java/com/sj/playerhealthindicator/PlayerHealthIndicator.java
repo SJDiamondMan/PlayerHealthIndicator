@@ -26,7 +26,7 @@ public class PlayerHealthIndicator {
         modEventBus.addListener(this::clientSetup);
         modEventBus.register(Config.class);
 
-        // Suppress deprecation warning
+        // Suppress deprecation warning for get() usage
         @SuppressWarnings("removal")
         ModLoadingContext modLoadingContext = ModLoadingContext.get();
         modLoadingContext.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
@@ -39,12 +39,13 @@ public class PlayerHealthIndicator {
     }
 
     @net.minecraftforge.eventbus.api.SubscribeEvent
-    public void onRenderLiving(RenderLivingEvent.Post<Player, ?, ?> event) {  
+    public void onRenderLiving(RenderLivingEvent.Post<Player, ?, ?> event) {
         if (!Config.showHealthIndicators) {
             return;
         }
 
-        Player player = event.getEntity();
+        // Use getEntityLiving() instead of getEntity() to retrieve the player entity
+        Player player = (Player) event.getEntityLiving();
         float health = player.getHealth();
         String healthText = String.format("%.1f", health);
 
