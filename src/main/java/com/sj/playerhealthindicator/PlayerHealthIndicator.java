@@ -26,7 +26,10 @@ public class PlayerHealthIndicator {
         modEventBus.addListener(this::clientSetup);
         modEventBus.register(Config.class);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
+        // Suppress deprecation warning
+        @SuppressWarnings("removal")
+        ModLoadingContext modLoadingContext = ModLoadingContext.get();
+        modLoadingContext.registerConfig(ModConfig.Type.CLIENT, Config.SPEC);
 
         MinecraftForge.EVENT_BUS.register(this);
     }
@@ -36,7 +39,7 @@ public class PlayerHealthIndicator {
     }
 
     @net.minecraftforge.eventbus.api.SubscribeEvent
-    public void onRenderLiving(RenderLivingEvent.RenderLayer event) {  // Use RenderLayer
+    public void onRenderLiving(RenderLivingEvent.Post<?, ?> event) {  
         if (!Config.showHealthIndicators) {
             return;
         }
@@ -67,7 +70,7 @@ public class PlayerHealthIndicator {
                         poseStack.last().pose(), bufferSource,
                         Font.DisplayMode.NORMAL, 0, 15728880);
 
-                bufferSource.endBatch();  // Ensure proper rendering
+                bufferSource.endBatch(); // Ensure proper rendering
             } finally {
                 poseStack.popPose(); // Always pop to prevent stack corruption
             }
